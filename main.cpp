@@ -26,6 +26,14 @@ struct Car{
 
 };
 
+void loadCars(unordered_map<string, Car>& cars);
+void displayMenu();
+void handleSearch(const unordered_map<string, Car>& cars);
+void handleSort(vector<Car>& cars);
+void handleFilter(const unordered_map<string, Car>& cars);
+void displayCar(const Car& car);
+
+
 int main() {
     std::cout << "Hello, World!" << std::endl;
     return 0;
