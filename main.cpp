@@ -11,6 +11,17 @@ struct Car{
     string engineType;
     bool hybrid;
     int forwardGear;
+    string transmission;
+    int mpg;
+    string fuelType;
+    int highwayMPG;
+    string classification;
+    string ID;
+    string make;
+    string modelYear;
+    int year;
+    int horsePower;
+    int torque;
 
 
 };
