@@ -85,26 +85,19 @@ vector<Car> read(const string& filename){
     return cars;
 
 }
-bool compareCars(const Car& a, const Car& b, const vector<string>& categories) {
-    for (const auto& category : categories) {
-        if (category == "mpg") {
-            if (a.mpg != b.mpg) return a.mpg > b.mpg;
-        } else if (category == "highwayMPG") {
-            if (a.highwayMPG != b.highwayMPG) return a.highwayMPG > b.highwayMPG;
-        } else if (category == "year") {
-            if (a.year != b.year) return a.year > b.year;
-        } else if (category == "horsePower") {
-            if (a.horsePower != b.horsePower) return a.horsePower > b.horsePower;
-        } else if (category == "torque") {
-            if (a.torque != b.torque) return a.torque > b.torque;
-        }
-    }
-    return false;
+double calculateWeightedSum(const Car& car, const unordered_map<string, double>& weights) {
+    double sum = 0.0;
+    sum += car.mpg * weights.at("mpg");
+    sum += car.highwayMPG * weights.at("highwayMPG");
+    sum += car.year * weights.at("year");
+    sum += car.horsePower * weights.at("horsePower");
+    sum += car.torque * weights.at("torque");
+    return sum;
 }
 
-void rankCars(vector<Car>& cars, const vector<string>& categories) {
-    sort(cars.begin(), cars.end(), [&categories](const Car& a, const Car& b) {
-        return compareCars(a, b, categories);
+void rankCars(vector<Car>& cars, const unordered_map<string, double>& weights) {
+    sort(cars.begin(), cars.end(), [&weights](const Car& a, const Car& b) {
+        return calculateWeightedSum(a, weights) > calculateWeightedSum(b, weights);
     });
 }
 
@@ -142,8 +135,16 @@ int main() {
     string filename = "cars.csv";
     vector<Car> cars = read(filename);
 
-    vector<string> categories = {"mpg", "highwayMPG", "year", "horsePower"};
-    rankCars(cars, categories);
+    // User-defined weights for each category
+    unordered_map<string, double> weights = {
+        {"mpg", 1.0},
+        {"highwayMPG", 0.8},
+        {"year", 0.5},
+        {"horsePower", 0.7},
+        {"torque", 0.6}
+    };
+
+    rankCars(cars, weights);
     cout << "Top 20 Cars Ranked:" << endl;
     printCars(vector<Car>(cars.begin(), cars.begin() + 20));
 
