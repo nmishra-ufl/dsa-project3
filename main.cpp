@@ -85,53 +85,76 @@ vector<Car> read(const string& filename){
     return cars;
 
 }
-int getCategoryValue(const Car& car, const string& category) {
-    if (category == "dimensions") return car.dimensions[0] * car.dimensions[1] * car.dimensions[2];
-    if (category == "driveLine") return hash<string>{}(car.driveLine);
-    if (category == "engineType") return hash<string>{}(car.engineType);
-    if (category == "hybrid") return car.hybrid == "Yes" ? 1 : 0;
-    if (category == "forwardGear") return car.forwardGear;
-    if (category == "transmission") return hash<string>{}(car.transmission);
-    if (category == "mpg") return car.mpg;
-    if (category == "fuelType") return hash<string>{}(car.fuelType);
-    if (category == "highwayMPG") return car.highwayMPG;
-    if (category == "classification") return hash<string>{}(car.classification);
-    if (category == "ID") return hash<string>{}(car.ID);
-    if (category == "make") return hash<string>{}(car.make);
-    if (category == "modelYear") return hash<string>{}(car.modelYear);
-    if (category == "year") return car.year;
-    if (category == "horsePower") return car.horsePower;
-    if (category == "torque") return car.torque;
-    return 0;
+bool compareCars(const Car& a, const Car& b, const vector<string>& categories) {
+    for (const auto& category : categories) {
+        if (category == "mpg") {
+            if (a.mpg != b.mpg) return a.mpg > b.mpg;
+        } else if (category == "highwayMPG") {
+            if (a.highwayMPG != b.highwayMPG) return a.highwayMPG > b.highwayMPG;
+        } else if (category == "year") {
+            if (a.year != b.year) return a.year > b.year;
+        } else if (category == "horsePower") {
+            if (a.horsePower != b.horsePower) return a.horsePower > b.horsePower;
+        } else if (category == "torque") {
+            if (a.torque != b.torque) return a.torque > b.torque;
+        }
+    }
+    return false;
+}
+
+void rankCars(vector<Car>& cars, const vector<string>& categories) {
+    sort(cars.begin(), cars.end(), [&categories](const Car& a, const Car& b) {
+        return compareCars(a, b, categories);
+    });
+}
+
+vector<Car> searchCars(const vector<Car>& cars, const unordered_map<string, string>& searchCriteria) {
+    vector<Car> results;
+    for (const auto& car : cars) {
+        bool match = true;
+        for (const auto& [key, value] : searchCriteria) {
+            if (key == "driveLine" && car.driveLine != value) match = false;
+            if (key == "engineType" && car.engineType != value) match = false;
+            if (key == "hybrid" && car.hybrid != value) match = false;
+            if (key == "transmission" && car.transmission != value) match = false;
+            if (key == "fuelType" && car.fuelType != value) match = false;
+            if (key == "classification" && car.classification != value) match = false;
+            if (key == "ID" && car.ID != value) match = false;
+            if (key == "make" && car.make != value) match = false;
+            if (key == "modelYear" && car.modelYear != value) match = false;
+        }
+        if (match) {
+            results.push_back(car);
+        }
+    }
+    return results;
+}
+
+void printCars(const vector<Car>& cars) {
+    for (const auto& car : cars) {
+        cout << "ID: " << car.ID << ", Make: " << car.make << ", Model Year: " << car.modelYear
+             << ", MPG: " << car.mpg << ", Highway MPG: " << car.highwayMPG << ", Year: " << car.year
+             << ", HorsePower: " << car.horsePower << ", Torque: " << car.torque << endl;
+    }
 }
 
 int main() {
-    string filename = "C:/Users/HP/CLionProjects/Project3/cars.csv";
+    string filename = "cars.csv";
     vector<Car> cars = read(filename);
 
-    vector<string> categories(4);
-    cout << "Enter 4 categories from the following list: dimensions, driveLine, engineType, hybrid, forwardGear, transmission, mpg, fuelType, highwayMPG, classification, ID, make, modelYear, year, horsePower, torque" << endl;
-    for (int i = 0; i < 4; ++i) {
-        cout << "Enter category " << i + 1 << ": ";
-        cin >> categories[i];
-    }
+    vector<string> categories = {"mpg", "highwayMPG", "year", "horsePower"};
+    rankCars(cars, categories);
+    cout << "Top 20 Cars Ranked:" << endl;
+    printCars(vector<Car>(cars.begin(), cars.begin() + 20));
 
-    sort(cars.begin(), cars.end(), [&categories](const Car& a, const Car& b) {
-        for (const string& category : categories) {
-            int valA = getCategoryValue(a, category);
-            int valB = getCategoryValue(b, category);
-            if (valA != valB) {
-                return valA > valB;
-            }
-        }
-        return false;
-    });
+    unordered_map<string, string> searchCriteria = {
+        {"make", "Toyota"},
+        {"modelYear", "2020"}
+    };
 
-    cout << "Top 20 cars based on selected categories:" << endl;
-    for (int i = 0; i < min(20, (int)cars.size()); ++i) {
-        const auto& car = cars[i];
-        cout << "Car ID: " << car.ID << ", Make: " << car.make << ", Model Year: " << car.modelYear << ", Horsepower: " << car.horsePower << ", Torque: " << car.torque << endl;
-    }
+    vector<Car> searchResults = searchCars(cars, searchCriteria);
+    cout << "\nSearch Results:" << endl;
+    printCars(searchResults);
 
     return 0;
 }
