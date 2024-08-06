@@ -304,6 +304,50 @@ void printCars(const vector<Car>& cars) {
     }
 }
 
+enum State {
+
+    WELCOME,
+
+    RANKING,
+
+    SEARCH,
+
+    INPUT,
+
+    RESULT,
+
+    EXIT
+
+};
+
+void setText(sf::Text& text, float x, float y) {
+    text.setPosition(x, y);
+    sf::FloatRect textRect = text.getLocalBounds();
+    text.setOrigin(textRect.left, textRect.top);
+}
+
+vector<string> wrapText(const string& text, const sf::Font& font, unsigned int characterSize, float maxWidth) {
+    vector<string> wrappedText;
+    string currentLine;
+    stringstream ss(text);
+    string word;
+
+    while (ss >> word) {
+        sf::Text tempText(currentLine + " " + word, font, characterSize);
+        if (tempText.getLocalBounds().width > maxWidth) {
+            wrappedText.push_back(currentLine);
+            currentLine = word;
+        } else {
+            if (!currentLine.empty()) {
+                currentLine += " ";
+            }
+            currentLine += word;
+        }
+    }
+    wrappedText.push_back(currentLine);
+    return wrappedText;
+}
+
 int main() {
     string filename = "C:/Users/HP/CLionProjects/Project3/cars.csv";
     unordered_map<string, vector<Car>> makeMap;
@@ -319,74 +363,258 @@ int main() {
     unordered_map<string, vector<Car>> classificationMap;
 
     vector<Car> cars = read(filename, makeMap, modelYearMap, yearMap, horsePowerMap, forwardGearMap, mpgMap, highwayMPGMap, torqueMap, driveLineMap, fuelTypeMap, classificationMap);
+//    sf::Texture backgroundTexture;
+//    sf::Sprite backgroundSprite;
+//
+//    if (!backgroundTexture.loadFromFile("C:/Users/HP/CLionProjects/Project3/bluecar.png")) {
+//        cout << "Failed to load background image" << endl;
+//        return -1;
+//    }
+//    backgroundSprite.setTexture(backgroundTexture);
 
-    cout << "Welcome to the AutoSearch Vehicle Selection Assistant!" << endl;
+    sf::RenderWindow window(sf::VideoMode(1200, 900), "AutoSearch Vehicle Selection Assistant");
 
-    unordered_map<string, double> weights = {
-            {"mpg", 1.0},
-            {"highwayMPG", 0.8},
-            {"year", 0.5},
-            {"horsePower", 0.7},
-            {"torque", 0.6}
-    };
-
-    string optionDisplay;
-    cout << "Would you like to display the current top 20 ranked cars? (yes/no)" << endl;
-    cin >> optionDisplay;
-    if (optionDisplay == "yes" || optionDisplay == "Yes"){
-        cout << "Here are the current Top 20 Cars Ranked:" << endl;
-        rankCars(cars, weights);
-        printCars(vector<Car>(cars.begin(), cars.begin() + 20));
+    // Load font
+    sf::Font font;
+    if (!font.loadFromFile("font.ttf")) {
+        cout << "Failed to load font" << endl;
+        return -1;
     }
 
-    cout << "\nPlease select your search criteria" << endl;
-    cout << "You can choose up to four categories" << endl;
-    cout << "Here are the categories: DriveLine (All-wheel drive, Front-wheel drive, Rear-wheel drive, Four-wheel drive),\n "
-            "Number of Forward Gears (4-8), MPG (8-38), Fuel Type (Gasoline or E85), "
-            "Highway MPG (11-43), \nClassification (Automatic transmission or Manual transmission), "
-            "Make (Type in brand with front capital), \nModel Year, "
-            "Year (2009-2012), Horsepower (100 - 638), Torque (98 - 774)." << endl;
+    sf::Text welcomeText("Welcome to the AutoSearch Vehicle Selection Assistant!\n\n"
+                         "Press 'R' to input ranking criteria.\n"
+                         "Press 'I' to input search criteria.\n"
+                         "Press 'Esc' to exit.", font, 24);
+    welcomeText.setFillColor(sf::Color::Black);
+    setText(welcomeText, 20, 20);
 
+    string userInput;
+    sf::Text inputText("", font, 18);
+    inputText.setFillColor(sf::Color::Black);
+    inputText.setStyle(sf::Text::Bold);
+    setText(inputText, 20, window.getSize().y - 80);
+
+    bool showCursor = true;
+    sf::Clock cursorClock;
+    sf::RectangleShape cursor(sf::Vector2f(2.f, inputText.getCharacterSize()));
+    cursor.setFillColor(sf::Color::Black);
+
+    State currentState = WELCOME;
+    bool needsUpdate = true;
 
     unordered_map<string, string> searchCriteria;
     unordered_map<string, int> intSearchCriteria;
-    string category;
-    string value;
-    int intValue;
-    for (int i = 0; i < 4; i++) {
-        cout << "Enter category (or 'done' to finish): ";
-        cin >> category;
-        if (category == "done") {
-            break;
+    vector<Car> searchResults;
+
+    sf::Text searchCriteriaText("Please select your search criteria.\nYou can choose up to four categories.\n"
+                                "Here are the categories: \n"
+                                "DriveLine (All-wheel drive, Front-wheel drive, Rear-wheel drive, Four-wheel drive),\n"
+                                "Number of Forward Gears (4-8), MPG (8-38), Fuel Type (Gasoline or E85),\n"
+                                "Highway MPG (11-43), Classification (Automatic transmission or Manual transmission),\n"
+                                "Make (Type in brand with front capital), Model Year,\n"
+                                "Year (2009-2012), Horsepower (100 - 638), Torque (98 - 774). \n\n"
+                                "To choose DriveLine type 'driveLine', To choose make type 'make', To choose model year type 'modelYear',\n"
+                                "To choose forward gears type 'forwardGear', To choose year type 'year', \nTo choose horsepower type 'horsePower',"
+                                "To choose MPG type 'mpg', To choose highway MPG type 'highwayMPG', \nTo choose torque type 'torque'." , font, 18);
+    searchCriteriaText.setFillColor(sf::Color::Black);
+    setText(searchCriteriaText, 20, 100);
+
+    string currentCategory;
+    bool enteringCategory = true;
+    int validCategoryCount = 0;
+    const int maxCategories = 4;
+
+    sf::View view = window.getDefaultView();
+    float scroll = 23.0f;
+
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed || (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)) {
+                window.close();
+            }
+            if (event.type == sf::Event::KeyPressed) {
+                if (currentState == WELCOME) {
+                    if (event.key.code == sf::Keyboard::R) {
+                        currentState = RANKING;
+                        needsUpdate = true;
+                    }
+                    else if (event.key.code == sf::Keyboard::I) {
+                        currentState = INPUT;
+                        needsUpdate = true;
+                    }
+                }
+                else if (currentState == INPUT) {
+                    if (event.key.code == sf::Keyboard::Return) {
+                        if (enteringCategory) {
+                            if (userInput == "done" || validCategoryCount >= maxCategories) {
+                                searchResults = searchCars(makeMap, modelYearMap, yearMap, horsePowerMap, forwardGearMap, mpgMap, highwayMPGMap, torqueMap, driveLineMap, fuelTypeMap, classificationMap, searchCriteria, intSearchCriteria);
+                                currentState = RESULT;
+                                needsUpdate = true;
+                            } else {
+                                currentCategory = userInput;
+                                enteringCategory = false;
+                                userInput.clear();
+                            }
+                        }
+                        else {
+                            bool validCategory = false;
+                            if (currentCategory == "make" || currentCategory == "modelYear" || currentCategory == "driveLine" || currentCategory == "fuelType" || currentCategory == "classification") {
+                                searchCriteria[currentCategory] = userInput;
+                                validCategory = true;
+                            }
+                            else if (currentCategory == "year" || currentCategory == "horsePower" || currentCategory == "forwardGear" || currentCategory == "mpg" || currentCategory == "highwayMPG" || currentCategory == "torque") {
+                                intSearchCriteria[currentCategory] = stoi(userInput);
+                                validCategory = true;
+                            }
+                            else {
+                                cout << "Invalid category." << endl;
+                            }
+                            if (validCategory) {
+                                validCategoryCount++;
+                                enteringCategory = true;
+                                userInput.clear();
+                            }
+                        }
+                        needsUpdate = true;
+                    }
+                    else if (event.key.code == sf::Keyboard::BackSpace) {
+                        if (!userInput.empty()) {
+                            userInput.pop_back();
+                            needsUpdate = true;
+                        }
+                    }
+                }
+                else if (currentState == RESULT) {
+                    if (event.key.code == sf::Keyboard::B) {
+                        currentState = WELCOME;
+                        needsUpdate = true;
+                        validCategoryCount = 0;
+                        searchCriteria.clear();
+                        intSearchCriteria.clear();
+                        userInput.clear();
+                    }
+                }
+            }
+            else if (event.type == sf::Event::TextEntered) {
+                if (currentState == INPUT) {
+                    if (event.text.unicode < 128 && event.text.unicode > 31) {
+                        userInput += static_cast<char>(event.text.unicode);
+                        needsUpdate = true;
+                    }
+                }
+            }
+            else if (event.type == sf::Event::MouseWheelScrolled) {
+                if (event.mouseWheelScroll.delta > 0) {
+                    view.move(0, -scroll);
+                }
+                else if (event.mouseWheelScroll.delta < 0) {
+                    view.move(0, scroll);
+                }
+                needsUpdate = true;
+            }
         }
-        if (category == "make" || category == "modelYear") {
-            cout << "Enter value: ";
-            cin >> value;
-            searchCriteria[category] = value;
+
+        if (cursorClock.getElapsedTime().asSeconds() >= 0.5f) {
+            showCursor = !showCursor;
+            cursorClock.restart();
+            needsUpdate = true;
         }
-        else if (category == "year" || category == "horsePower" || category == "forwardGear") {
-            cout << "Enter value: ";
-            cin >> intValue;
-            intSearchCriteria[category] = intValue;
-        }
-        else if (category == "mpg" || category == "highwayMPG" || category == "torque") {
-            cout << "Enter value: ";
-            cin >> intValue;
-            intSearchCriteria[category] = intValue;
-        }
-        else if (category == "driveLine" || category == "fuelType" || category == "classification") {
-            cout << "Enter value: ";
-            cin >> value;
-            searchCriteria[category] = value;
-        }
-        else {
-            cout << "Invalid category." << endl;
+
+        if (needsUpdate) {
+            window.clear(sf::Color::White);
+            window.setView(view);
+
+            if (currentState == WELCOME) {
+//                window.draw(backgroundSprite);
+                window.draw(welcomeText);
+            } else if (currentState == INPUT) {
+                window.draw(searchCriteriaText);
+                if (enteringCategory) {
+                    inputText.setString("Enter category (or 'done' to finish, " + to_string(maxCategories - validCategoryCount) + " remaining): " + userInput);
+                } else {
+                    inputText.setString("Enter value for " + currentCategory + ": " + userInput);
+                }
+                window.draw(inputText);
+
+                if (showCursor) {
+                    float cursorX = inputText.getPosition().x + inputText.getLocalBounds().width + 5;
+                    float cursorY = inputText.getPosition().y;
+                    cursor.setPosition(cursorX, cursorY);
+                    window.draw(cursor);
+                }
+            }
+            else if (currentState == RANKING) {
+                rankCars(cars, {
+                        {"mpg", 1.0},
+                        {"highwayMPG", 0.8},
+                        {"year", 0.5},
+                        {"horsePower", 0.7},
+                        {"torque", 0.6}
+                });
+
+                sf::Text carText("", font, 18);
+                carText.setFillColor(sf::Color::Black);
+                float yPosition = 50.0f;
+                float maxWidth = window.getSize().x - 20;
+
+                for (size_t i = 0; i < 20 && i < cars.size(); ++i) {
+                    string carDetails = "ID: " + cars[i].ID + ", Make: " + cars[i].make + ", Model Year: " + cars[i].modelYear +
+                                        ", MPG: " + to_string(cars[i].mpg) + ", Highway MPG: " + to_string(cars[i].highwayMPG) +
+                                        ", Year: " + to_string(cars[i].year) + ", HorsePower: " + to_string(cars[i].horsePower) +
+                                        ", Torque: " + to_string(cars[i].torque);
+                    vector<string> wrappedText = wrapText(carDetails, font, 18, maxWidth);
+                    for (const auto &line : wrappedText) {
+                        carText.setString(line);
+                        carText.setPosition(20, yPosition);
+                        window.draw(carText);
+                        yPosition += 30;
+                    }
+                    yPosition += 10;
+                }
+
+                sf::Text instructionText("Press 'B' to go back to the main menu.\nPress 'Esc' to exit.", font, 24);
+                instructionText.setFillColor(sf::Color::Black);
+                setText(instructionText, window.getSize().x / 2.0f, yPosition + 50);
+                window.draw(instructionText);
+            }
+            else if (currentState == RESULT) {
+                sf::Text resultText("Search Results:\n", font, 24);
+                resultText.setFillColor(sf::Color::Black);
+                setText(resultText, 20, 20);
+                window.draw(resultText);
+
+                sf::Text carText("", font, 18);
+                carText.setFillColor(sf::Color::Black);
+                float yPosition = 80.0f;
+                float maxWidth = window.getSize().x - 20;
+
+                for (const auto& car : searchResults) {
+                    string carDetails = "ID: " + car.ID + ", Make: " + car.make + ", Model Year: " + car.modelYear +
+                                        ", MPG: " + to_string(car.mpg) + ", Highway MPG: " + to_string(car.highwayMPG) +
+                                        ", Year: " + to_string(car.year) + ", HorsePower: " + to_string(car.horsePower) +
+                                        ", Torque: " + to_string(car.torque);
+                    vector<string> wrappedText = wrapText(carDetails, font, 18, maxWidth);
+                    for (const auto &line : wrappedText) {
+                        carText.setString(line);
+                        carText.setPosition(20, yPosition);
+                        window.draw(carText);
+                        yPosition += 30;
+                    }
+                    yPosition += 10;
+                }
+
+                sf::Text instructionText("Press 'B' to go back to the main menu.\nPress 'Esc' to exit.", font, 24);
+                instructionText.setFillColor(sf::Color::Black);
+                setText(instructionText, window.getSize().x / 2.0f, yPosition + 50);
+                window.draw(instructionText);
+            }
+
+            window.display();
+            needsUpdate = false;
         }
     }
 
-    vector<Car> searchResults = searchCars(makeMap, modelYearMap, yearMap, horsePowerMap, forwardGearMap, mpgMap, highwayMPGMap, torqueMap, driveLineMap, fuelTypeMap, classificationMap, searchCriteria, intSearchCriteria);
-    cout << "\nSearch Results:" << endl;
-    printCars(searchResults);
-
     return 0;
 }
+
