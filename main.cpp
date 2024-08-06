@@ -367,6 +367,14 @@ int main() {
 
     vector<Car> cars = read(filename, makeMap, modelYearMap, yearMap, horsePowerMap, forwardGearMap, mpgMap, highwayMPGMap, torqueMap, driveLineMap, fuelTypeMap, classificationMap);
 
+    sf::Texture backgroundTexture;
+    sf::Sprite backgroundSprite;
+
+    if (!backgroundTexture.loadFromFile("C:/Users/HP/CLionProjects/Project3/bluecar.png")) {
+        cout << "Failed to load background image" << endl;
+        return -1;
+    }
+    backgroundSprite.setTexture(backgroundTexture);
     sf::RenderWindow window(sf::VideoMode(1200, 900), "AutoSearch Vehicle Selection Assistant");
 
     // Load font
@@ -608,6 +616,7 @@ int main() {
             window.setView(view);
 
             if (currentState == WELCOME) {
+                window.draw(backgroundSprite);
                 window.draw(welcomeText);
             }
 
