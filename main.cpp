@@ -55,7 +55,10 @@ vector<Car> read(const string& filename,
                  unordered_map<int, vector<Car>>& forwardGearMap,
                  unordered_map<int, vector<Car>>& mpgMap,
                  unordered_map<int, vector<Car>>& highwayMPGMap,
-                 unordered_map<int, vector<Car>>& torqueMap) {
+                 unordered_map<int, vector<Car>>& torqueMap,
+                 unordered_map<string, vector<Car>>& driveLineMap,
+                 unordered_map<string, vector<Car>>& fuelTypeMap,
+                 unordered_map<string, vector<Car>>& classificationMap) {
     vector<Car> cars;
     ifstream file(filename);
     if (!file.is_open()) {
@@ -97,6 +100,9 @@ vector<Car> read(const string& filename,
         mpgMap[car.mpg].push_back(car);
         highwayMPGMap[car.highwayMPG].push_back(car);
         torqueMap[car.torque].push_back(car);
+        driveLineMap[car.driveLine].push_back(car);
+        fuelTypeMap[car.fuelType].push_back(car);
+        classificationMap[car.classification].push_back(car);
 
 
         cars.push_back(car);
@@ -107,11 +113,12 @@ vector<Car> read(const string& filename,
 
 double calculateWeightedSum(const Car& car, const unordered_map<string, double>& weights) {
     double sum = 0.0;
-    sum += car.mpg * weights.at("mpg");
-    sum += car.highwayMPG * weights.at("highwayMPG");
-    sum += car.year * weights.at("year");
-    sum += car.horsePower * weights.at("horsePower");
-    sum += car.torque * weights.at("torque");
+    // ((value - (min - 1))/ (max - (min - 1))) * weight
+    sum += ((car.mpg - 7)/ 31) * weights.at("mpg");
+    sum += ((car.highwayMPG - 10)/ 33) * weights.at("highwayMPG");
+    sum += ((car.year - 2008)/4) * weights.at("year");
+    sum += ((car.horsePower - 99)/539) * weights.at("horsePower");
+    sum += ((car.torque - 97)/677) * weights.at("torque");
     return sum;
 }
 
@@ -143,6 +150,9 @@ vector<Car> searchCars(const unordered_map<string, vector<Car>>& makeMap,
                        const unordered_map<int, vector<Car>>& mpgMap,
                        const unordered_map<int, vector<Car>>& highwayMPGMap,
                        const unordered_map<int, vector<Car>>& torqueMap,
+                       const unordered_map<string, vector<Car>>& driveLineMap,
+                       const unordered_map<string, vector<Car>>& fuelTypeMap,
+                       const unordered_map<string, vector<Car>>& classificationMap,
                        const unordered_map<string, string>& criteria,
                        const unordered_map<string, int>& criteriaInt) {
     vector<Car> results;
@@ -245,6 +255,43 @@ vector<Car> searchCars(const unordered_map<string, vector<Car>>& makeMap,
         }
     }
 
+    if (criteria.find("driveLine") != criteria.end()) {
+        auto it = driveLineMap.find(criteria.at("driveLine"));
+        if (it != driveLineMap.end()) {
+            if (first) {
+                results = it->second;
+                first = false;
+            }
+            else {
+                results = correctResults(results, it->second);
+            }
+        }
+    }
+    if (criteria.find("fuelType") != criteria.end()) {
+        auto it = fuelTypeMap.find(criteria.at("fuelType"));
+        if (it != fuelTypeMap.end()) {
+            if (first) {
+                results = it->second;
+                first = false;
+            }
+            else {
+                results = correctResults(results, it->second);
+            }
+        }
+    }
+    if (criteria.find("classification") != criteria.end()) {
+        auto it = classificationMap.find(criteria.at("classification"));
+        if (it != classificationMap.end()) {
+            if (first) {
+                results = it->second;
+                first = false;
+            }
+            else {
+                results = correctResults(results, it->second);
+            }
+        }
+    }
+
     return results;
 }
 
@@ -267,8 +314,11 @@ int main() {
     unordered_map<int, vector<Car>> mpgMap;
     unordered_map<int, vector<Car>> highwayMPGMap;
     unordered_map<int, vector<Car>> torqueMap;
+    unordered_map<string, vector<Car>> driveLineMap;
+    unordered_map<string, vector<Car>> fuelTypeMap;
+    unordered_map<string, vector<Car>> classificationMap;
 
-    vector<Car> cars = read(filename, makeMap, modelYearMap, yearMap, horsePowerMap, forwardGearMap, mpgMap, highwayMPGMap, torqueMap);
+    vector<Car> cars = read(filename, makeMap, modelYearMap, yearMap, horsePowerMap, forwardGearMap, mpgMap, highwayMPGMap, torqueMap, driveLineMap, fuelTypeMap, classificationMap);
 
     cout << "Welcome to the AutoSearch Vehicle Selection Assistant!" << endl;
 
@@ -291,10 +341,11 @@ int main() {
 
     cout << "\nPlease select your search criteria" << endl;
     cout << "You can choose up to four categories" << endl;
-    cout << "Here are the categories: DriveLine, Engine Type, "
-            "Number of Forward Gears, Transmission, MPG, Fuel Type, "
-            "Highway MPG, Classification, Make, Model Year, "
-            "Year, Horsepower, Torque." << endl;
+    cout << "Here are the categories: DriveLine (All-wheel drive, Front-wheel drive, Rear-wheel drive), "
+            "Number of Forward Gears (4-8), Transmission, MPG (8-38), Fuel Type (Gasoline or E85), "
+            "Highway MPG (11-43), Classification (Automatic transmission or Manual transmission), "
+            "Make (Type in brand with front capital), Model Year, "
+            "Year (2009-2012), Horsepower (100 - 638), Torque (98 - 774)." << endl;
 
 
     unordered_map<string, string> searchCriteria;
@@ -323,12 +374,17 @@ int main() {
             cin >> intValue;
             intSearchCriteria[category] = intValue;
         }
+        else if (category == "driveLine" || category == "fuelType" || category == "classification") {
+            cout << "Enter value: ";
+            cin >> value;
+            searchCriteria[category] = value;
+        }
         else {
             cout << "Invalid category." << endl;
         }
     }
 
-    vector<Car> searchResults = searchCars(makeMap, modelYearMap, yearMap, horsePowerMap, forwardGearMap, mpgMap, highwayMPGMap, torqueMap, searchCriteria, intSearchCriteria);
+    vector<Car> searchResults = searchCars(makeMap, modelYearMap, yearMap, horsePowerMap, forwardGearMap, mpgMap, highwayMPGMap, torqueMap, driveLineMap, fuelTypeMap, classificationMap, searchCriteria, intSearchCriteria);
     cout << "\nSearch Results:" << endl;
     printCars(searchResults);
 
