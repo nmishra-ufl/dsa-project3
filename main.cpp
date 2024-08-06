@@ -121,7 +121,6 @@ double calculateWeightedSum(const Car& car, const unordered_map<string, double>&
     sum += ((car.year - 2008.0)/4) * weights.at("year");
     sum += ((car.horsePower - 99.0)/539) * weights.at("horsePower");
     sum += ((car.torque - 97.0)/677) * weights.at("torque");
-    cout << car.mpg << " " << sum << endl;
     return sum;
 }
 
@@ -429,7 +428,11 @@ int main() {
     int validCategoryCount = 0;
     const int maxCategories = 4;
 
-    sf::Text sortCriteriaText("sort criteria text", font, 18);
+    sf::Text sortCriteriaText("Please select your sort criteria.\nYou can choose up to five categories, in order of importance.\n"
+                            "Please choose from the following criteria: \n"
+                            "To choose year type 'year', \nTo choose horsepower type 'horsePower',"
+                            "To choose MPG type 'mpg', \nTo choose highway MPG type 'highway mpg', "
+                            "\nTo choose torque type 'torque'.", font, 18);
     sortCriteriaText.setFillColor(sf::Color::Black);
     setText(sortCriteriaText, 20, 100);
 
@@ -501,15 +504,6 @@ int main() {
                     }
                 }
 
-
-
-
-
-
-
-
-
-
                 else if (currentState == RANKING) {
                     if (event.key.code == sf::Keyboard::Return) {
                         if (userInput == "done" || validSortCount >= maxSorts) {
@@ -536,7 +530,7 @@ int main() {
                             rankCars(cars, weights);
                             currentState = RANKINGRESULT;
                             needsUpdate = true;
-                        } else if (userInput == "mpg" || userInput == "highway mpg" || userInput == "horsepower" || userInput == "torque" || userInput == "year"){
+                        } else if (userInput == "mpg" || userInput == "highway mpg" || userInput == "horsePower" || userInput == "torque" || userInput == "year"){
                             sortOrder.push_back(userInput);
                             validSortCount++;
                             userInput.clear();
