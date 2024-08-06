@@ -352,7 +352,7 @@ vector<string> wrapText(const string& text, const sf::Font& font, unsigned int c
 }
 
 int main() {
-    string filename = "C:/Users/HP/CLionProjects/Project3/cars.csv";
+    string filename = "../cars.csv";
     unordered_map<string, vector<Car>> makeMap;
     unordered_map<string, vector<Car>> modelYearMap;
     unordered_map<int, vector<Car>> yearMap;
@@ -543,9 +543,10 @@ int main() {
                         } else if (userInput == "mpg" || userInput == "highway mpg" || userInput == "horsePower" || userInput == "torque" || userInput == "year"){
                             sortOrder.push_back(userInput);
                             validSortCount++;
+                            notCategory.setString("");
                             userInput.clear();
                         }else {
-                            cout << "Invalid category." << endl;
+                            notCategory.setString("Invalid category");
                             userInput.clear();
                         }
                         needsUpdate = true;
@@ -567,6 +568,7 @@ int main() {
                         validSortCount = 0;
                         sortOrder.clear();
                         userInput.clear();
+                        notCategory.setString("");
                     }
                 }
             }
@@ -632,6 +634,10 @@ int main() {
                 }
                 window.draw(inputText);
 
+                if (!notCategory.getString().isEmpty()) {
+                    window.draw(notCategory);
+                }
+
                 if (showCursor) {
                     float cursorX = inputText.getPosition().x + inputText.getLocalBounds().width + 5;
                     float cursorY = inputText.getPosition().y;
@@ -670,7 +676,7 @@ int main() {
                 setText(instructionText, window.getSize().x / 2.0f, yPosition + 50);
                 window.draw(instructionText);
             }
-            
+
             else if (currentState == RANKINGRESULT) {
 
                 sf::Text carText("", font, 18);
@@ -707,8 +713,3 @@ int main() {
 
     return 0;
 }
-
-
-
-
-
