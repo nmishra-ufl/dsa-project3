@@ -227,9 +227,15 @@ int main() {
             {"torque", 0.6}
     };
 
-    cout << "Here are the current Top 20 Cars Ranked:" << endl;
-    rankCars(cars, weights);
-    printCars(vector<Car>(cars.begin(), cars.begin() + 20));
+    string optionDisplay;
+    cout << "Would you like to display the current top 20 ranked cars? (yes/no)" << endl;
+    cin >> optionDisplay;
+    if (optionDisplay == "yes" || optionDisplay == "Yes"){
+        cout << "Here are the current Top 20 Cars Ranked:" << endl;
+        rankCars(cars, weights);
+        printCars(vector<Car>(cars.begin(), cars.begin() + 20));
+    }
+
     cout << "\nPlease select your search criteria" << endl;
     cout << "You can choose up to four categories" << endl;
     cout << "Here are the categories: DriveLine, Engine Type, Hybrid, "
