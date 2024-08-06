@@ -452,6 +452,7 @@ int main() {
                     if (event.key.code == sf::Keyboard::R) {
                         currentState = RANKING;
                         needsUpdate = true;
+
                     }
                     else if (event.key.code == sf::Keyboard::I) {
                         currentState = INPUT;
@@ -496,6 +497,7 @@ int main() {
                                 if (validCategoryCount >= maxCategories) {
                                     searchResults = searchCars(makeMap, modelYearMap, yearMap, horsePowerMap, forwardGearMap, mpgMap, highwayMPGMap, torqueMap, driveLineMap, fuelTypeMap, classificationMap, searchCriteria, intSearchCriteria);
                                     currentState = RESULT;
+                                    //needsUpdate = true;
                                 }
                                 enteringCategory = true;
                                 userInput.clear();
@@ -503,6 +505,7 @@ int main() {
                             }
                             else{
                                 notCategory.setString("Invalid category");
+
                             }
                         }
                         needsUpdate = true;
@@ -549,6 +552,7 @@ int main() {
                             notCategory.setString("Invalid category");
                             userInput.clear();
                         }
+                        userInput.clear();
                         needsUpdate = true;
                     }
                     else if (event.key.code == sf::Keyboard::BackSpace) {
@@ -569,11 +573,12 @@ int main() {
                         sortOrder.clear();
                         userInput.clear();
                         notCategory.setString("");
+                        view = window.getDefaultView();
                     }
                 }
             }
             else if (event.type == sf::Event::TextEntered) {
-                if (currentState == INPUT || RANKING) {
+                if (currentState == INPUT || currentState == RANKING) {
                     if (event.text.unicode < 128 && event.text.unicode > 31) {
                         userInput += static_cast<char>(event.text.unicode);
                         needsUpdate = true;
@@ -581,13 +586,14 @@ int main() {
                 }
             }
             else if (event.type == sf::Event::MouseWheelScrolled) {
-                if (event.mouseWheelScroll.delta > 0) {
-                    view.move(0, -scroll);
+                if (currentState == RESULT || currentState == RANKINGRESULT) {
+                    if (event.mouseWheelScroll.delta > 0) {
+                        view.move(0, -scroll);
+                    } else if (event.mouseWheelScroll.delta < 0) {
+                        view.move(0, scroll);
+                    }
+                    needsUpdate = true;
                 }
-                else if (event.mouseWheelScroll.delta < 0) {
-                    view.move(0, scroll);
-                }
-                needsUpdate = true;
             }
         }
 
