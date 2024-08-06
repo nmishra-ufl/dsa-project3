@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
+#include <SFML/Graphics.hpp>
 using namespace std;
 
 struct Car {
@@ -305,7 +306,6 @@ void printCars(const vector<Car>& cars) {
 
 int main() {
     string filename = "C:/Users/HP/CLionProjects/Project3/cars.csv";
-
     unordered_map<string, vector<Car>> makeMap;
     unordered_map<string, vector<Car>> modelYearMap;
     unordered_map<int, vector<Car>> yearMap;
@@ -341,10 +341,10 @@ int main() {
 
     cout << "\nPlease select your search criteria" << endl;
     cout << "You can choose up to four categories" << endl;
-    cout << "Here are the categories: DriveLine (All-wheel drive, Front-wheel drive, Rear-wheel drive), "
-            "Number of Forward Gears (4-8), Transmission, MPG (8-38), Fuel Type (Gasoline or E85), "
-            "Highway MPG (11-43), Classification (Automatic transmission or Manual transmission), "
-            "Make (Type in brand with front capital), Model Year, "
+    cout << "Here are the categories: DriveLine (All-wheel drive, Front-wheel drive, Rear-wheel drive, Four-wheel drive),\n "
+            "Number of Forward Gears (4-8), MPG (8-38), Fuel Type (Gasoline or E85), "
+            "Highway MPG (11-43), \nClassification (Automatic transmission or Manual transmission), "
+            "Make (Type in brand with front capital), \nModel Year, "
             "Year (2009-2012), Horsepower (100 - 638), Torque (98 - 774)." << endl;
 
 
