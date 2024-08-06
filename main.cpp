@@ -87,11 +87,12 @@ vector<Car> read(const string& filename){
 }
 double calculateWeightedSum(const Car& car, const unordered_map<string, double>& weights) {
     double sum = 0.0;
-    sum += car.mpg * weights.at("mpg");
-    sum += car.highwayMPG * weights.at("highwayMPG");
-    sum += car.year * weights.at("year");
-    sum += car.horsePower * weights.at("horsePower");
-    sum += car.torque * weights.at("torque");
+    // ((value - (min - 1))/ (max - (min - 1))) * weight
+    sum += ((car.mpg - 7)/ 31) * weights.at("mpg");
+    sum += ((car.highwayMPG - 10)/ 33) * weights.at("highwayMPG");
+    sum += ((car.year - 2008)/4) * weights.at("year");
+    sum += ((car.horsePower - 99)/539) * weights.at("horsePower");
+    sum += ((car.torque - 97)/677) * weights.at("torque");
     return sum;
 }
 
