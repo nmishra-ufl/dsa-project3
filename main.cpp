@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <algorithm>
 using namespace std;
 
 struct Car {
@@ -95,6 +96,22 @@ vector<Car> read(const string& filename,
     }
     file.close();
     return cars;
+}
+
+double calculateWeightedSum(const Car& car, const unordered_map<string, double>& weights) {
+    double sum = 0.0;
+    sum += car.mpg * weights.at("mpg");
+    sum += car.highwayMPG * weights.at("highwayMPG");
+    sum += car.year * weights.at("year");
+    sum += car.horsePower * weights.at("horsePower");
+    sum += car.torque * weights.at("torque");
+    return sum;
+}
+
+void rankCars(vector<Car>& cars, const unordered_map<string, double>& weights) {
+    sort(cars.begin(), cars.end(), [&weights](const Car& a, const Car& b) {
+        return calculateWeightedSum(a, weights) > calculateWeightedSum(b, weights);
+    });
 }
 
 vector<Car> correctResults(const vector<Car>& base, const vector<Car>& additional) {
@@ -211,6 +228,7 @@ int main() {
     };
 
     cout << "Here are the current Top 20 Cars Ranked:" << endl;
+    rankCars(cars, weights);
     printCars(vector<Car>(cars.begin(), cars.begin() + 20));
     cout << "\nPlease select your search criteria" << endl;
     cout << "You can choose up to four categories" << endl;
