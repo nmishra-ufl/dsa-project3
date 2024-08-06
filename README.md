@@ -9,3 +9,4 @@ Nikhil Mishra
 Asrith Yerramesetty
 
 
+To run this project, please ensure that you have the cars.csv file in the same folder as main.cpp, and that the files in cmake-build-debug match the ones in the github repository.
