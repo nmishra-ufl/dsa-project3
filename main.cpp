@@ -200,7 +200,7 @@ int main() {
 
     vector<Car> cars = read(filename, makeMap, modelYearMap, yearMap, horsePowerMap, forwardGearMap);
 
-    cout << "Welcome to the AutoSearch Vehicle Compendium!" << endl;
+    cout << "Welcome to the AutoSearch Vehicle Selection Assistant!" << endl;
 
     unordered_map<string, double> weights = {
             {"mpg", 1.0},
@@ -212,20 +212,39 @@ int main() {
 
     cout << "Here are the current Top 20 Cars Ranked:" << endl;
     printCars(vector<Car>(cars.begin(), cars.begin() + 20));
-    cout << "" << endl;
-    cout << "Please select your search criteria" << endl;
+    cout << "\nPlease select your search criteria" << endl;
     cout << "You can choose up to four categories" << endl;
     cout << "Here are the categories: DriveLine, Engine Type, Hybrid, "
             "Number of Forward Gears, Transmission, MPG, Fuel Type, "
             "Highway MPG, Classification, Make, Model Year, "
             "Year, Horsepower, Torque." << endl;
 
-    unordered_map<string, string> searchCriteria = {
-            {"make", "Toyota"}
-    };
-    unordered_map<string, int> intSearchCriteria = {
-            {"year", 2012}
-    };
+
+    unordered_map<string, string> searchCriteria;
+    unordered_map<string, int> intSearchCriteria;
+    string category;
+    string value;
+    int intValue;
+    for (int i = 0; i < 4; i++) {
+        cout << "Enter category (or 'done' to finish): ";
+        cin >> category;
+        if (category == "done") {
+            break;
+        }
+        if (category == "make" || category == "modelYear") {
+            cout << "Enter value: ";
+            cin >> value;
+            searchCriteria[category] = value;
+        }
+        else if (category == "year" || category == "horsePower" || category == "forwardGear") {
+            cout << "Enter value: ";
+            cin >> intValue;
+            intSearchCriteria[category] = intValue;
+        }
+        else {
+            cout << "Invalid category." << endl;
+        }
+    }
 
     vector<Car> searchResults = searchCars(makeMap, modelYearMap, yearMap, horsePowerMap, forwardGearMap, searchCriteria, intSearchCriteria);
     cout << "\nSearch Results:" << endl;
