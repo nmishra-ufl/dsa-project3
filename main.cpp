@@ -363,14 +363,6 @@ int main() {
     unordered_map<string, vector<Car>> classificationMap;
 
     vector<Car> cars = read(filename, makeMap, modelYearMap, yearMap, horsePowerMap, forwardGearMap, mpgMap, highwayMPGMap, torqueMap, driveLineMap, fuelTypeMap, classificationMap);
-//    sf::Texture backgroundTexture;
-//    sf::Sprite backgroundSprite;
-//
-//    if (!backgroundTexture.loadFromFile("C:/Users/HP/CLionProjects/Project3/bluecar.png")) {
-//        cout << "Failed to load background image" << endl;
-//        return -1;
-//    }
-//    backgroundSprite.setTexture(backgroundTexture);
 
     sf::RenderWindow window(sf::VideoMode(1200, 900), "AutoSearch Vehicle Selection Assistant");
 
@@ -415,7 +407,8 @@ int main() {
                                 "Year (2009-2012), Horsepower (100 - 638), Torque (98 - 774). \n\n"
                                 "To choose DriveLine type 'driveLine', To choose make type 'make', To choose model year type 'modelYear',\n"
                                 "To choose forward gears type 'forwardGear', To choose year type 'year', \nTo choose horsepower type 'horsePower',"
-                                "To choose MPG type 'mpg', To choose highway MPG type 'highwayMPG', \nTo choose torque type 'torque'." , font, 18);
+                                "To choose MPG type 'mpg', To choose highway MPG type 'highwayMPG', \nTo choose torque type 'torque',"
+                                "To choose classification type 'classification'." , font, 18);
     searchCriteriaText.setFillColor(sf::Color::Black);
     setText(searchCriteriaText, 20, 100);
 
@@ -426,6 +419,10 @@ int main() {
 
     sf::View view = window.getDefaultView();
     float scroll = 23.0f;
+
+    sf::Text notCategory("", font, 18);
+    notCategory.setFillColor(sf::Color::Red);
+    setText(notCategory, 20, window.getSize().y - 120);
 
     while (window.isOpen()) {
         sf::Event event;
@@ -451,10 +448,19 @@ int main() {
                                 searchResults = searchCars(makeMap, modelYearMap, yearMap, horsePowerMap, forwardGearMap, mpgMap, highwayMPGMap, torqueMap, driveLineMap, fuelTypeMap, classificationMap, searchCriteria, intSearchCriteria);
                                 currentState = RESULT;
                                 needsUpdate = true;
-                            } else {
+                            }
+                            else {
                                 currentCategory = userInput;
-                                enteringCategory = false;
-                                userInput.clear();
+                                if (currentCategory == "make" || currentCategory == "modelYear" || currentCategory == "driveLine" || currentCategory == "fuelType" || currentCategory == "classification" ||
+                                    currentCategory == "year" || currentCategory == "horsePower" || currentCategory == "forwardGear" || currentCategory == "mpg" || currentCategory == "highwayMPG" || currentCategory == "torque") {
+                                    enteringCategory = false;
+                                    userInput.clear();
+                                    notCategory.setString("");
+                                }
+                                else {
+                                    notCategory.setString("Invalid category.");
+                                    userInput.clear();
+                                }
                             }
                         }
                         else {
@@ -467,13 +473,19 @@ int main() {
                                 intSearchCriteria[currentCategory] = stoi(userInput);
                                 validCategory = true;
                             }
-                            else {
-                                cout << "Invalid category." << endl;
-                            }
+
                             if (validCategory) {
                                 validCategoryCount++;
+                                if (validCategoryCount >= maxCategories) {
+                                    searchResults = searchCars(makeMap, modelYearMap, yearMap, horsePowerMap, forwardGearMap, mpgMap, highwayMPGMap, torqueMap, driveLineMap, fuelTypeMap, classificationMap, searchCriteria, intSearchCriteria);
+                                    currentState = RESULT;
+                                }
                                 enteringCategory = true;
                                 userInput.clear();
+                                notCategory.setString("");
+                            }
+                            else{
+                                notCategory.setString("Invalid category");
                             }
                         }
                         needsUpdate = true;
@@ -526,16 +538,23 @@ int main() {
             window.setView(view);
 
             if (currentState == WELCOME) {
-//                window.draw(backgroundSprite);
                 window.draw(welcomeText);
-            } else if (currentState == INPUT) {
+            }
+
+            else if (currentState == INPUT) {
                 window.draw(searchCriteriaText);
                 if (enteringCategory) {
                     inputText.setString("Enter category (or 'done' to finish, " + to_string(maxCategories - validCategoryCount) + " remaining): " + userInput);
-                } else {
+                }
+                else {
+
                     inputText.setString("Enter value for " + currentCategory + ": " + userInput);
                 }
                 window.draw(inputText);
+
+                if (!notCategory.getString().isEmpty()) {
+                    window.draw(notCategory);
+                }
 
                 if (showCursor) {
                     float cursorX = inputText.getPosition().x + inputText.getLocalBounds().width + 5;
@@ -552,7 +571,6 @@ int main() {
                         {"horsePower", 0.7},
                         {"torque", 0.6}
                 });
-
                 sf::Text carText("", font, 18);
                 carText.setFillColor(sf::Color::Black);
                 float yPosition = 50.0f;
@@ -617,4 +635,8 @@ int main() {
 
     return 0;
 }
+
+
+
+
 
