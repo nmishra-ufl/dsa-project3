@@ -391,7 +391,7 @@ int main() {
 
     sf::Text welcomeText("Welcome to the AutoSearch Vehicle Selection Assistant!\n\n"
                          "Press 'R' to input ranking criteria.\n"
-                         "Press 'I' to input search criteria.\n"
+                         "Press 'S' to input search criteria.\n"
                          "Press 'Esc' to exit.", font, 24);
     welcomeText.setFillColor(sf::Color::Black);
     setText(welcomeText, 20, 20);
@@ -481,7 +481,7 @@ int main() {
                         sf::Event discardEvent;
                         while (window.pollEvent(discardEvent)) {}
                     }
-                    else if (event.key.code == sf::Keyboard::I) {
+                    else if (event.key.code == sf::Keyboard::S) {
                         currentState = INPUT;
                         needsUpdate = true;
                         userInput.clear();
