@@ -579,7 +579,7 @@ int main() {
                                 };
                             }else {
                                 for(int i = 0;i<sortOrder.size();i++) {
-                                    weights[sortOrder[i]] = (1/(pow(1.3,i)));
+                                    weights[sortOrder[i]] = (1/(pow(1.5,i)));
                                 }
                             }
                             rankCars(cars, weights);
