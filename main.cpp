@@ -382,7 +382,6 @@ int main() {
 
     sf::RenderWindow window(sf::VideoMode(1200, 900), "AutoSearch Vehicle Selection Assistant");
 
-    // Load font
     sf::Font font;
     if (!font.loadFromFile("font.ttf")) {
         cout << "Failed to load font" << endl;
