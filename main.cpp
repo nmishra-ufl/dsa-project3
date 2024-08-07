@@ -370,7 +370,7 @@ int main() {
     sf::Texture backgroundTexture;
     sf::Sprite backgroundSprite;
 
-    if (!backgroundTexture.loadFromFile("C:/Users/HP/CLionProjects/Project3/bluecar.png")) {
+    if (!backgroundTexture.loadFromFile("../bluecar.png")) {
         cout << "Failed to load background image" << endl;
         return -1;
     }
@@ -460,11 +460,18 @@ int main() {
                     if (event.key.code == sf::Keyboard::R) {
                         currentState = RANKING;
                         needsUpdate = true;
+                        userInput.clear();
 
+                        sf::Event discardEvent;
+                        while (window.pollEvent(discardEvent)) {}
                     }
                     else if (event.key.code == sf::Keyboard::I) {
                         currentState = INPUT;
                         needsUpdate = true;
+                        userInput.clear();
+
+                        sf::Event discardEvent;
+                        while (window.pollEvent(discardEvent)) {}
                     }
                 }
                 else if (currentState == INPUT) {
@@ -505,7 +512,7 @@ int main() {
                                 if (validCategoryCount >= maxCategories) {
                                     searchResults = searchCars(makeMap, modelYearMap, yearMap, horsePowerMap, forwardGearMap, mpgMap, highwayMPGMap, torqueMap, driveLineMap, fuelTypeMap, classificationMap, searchCriteria, intSearchCriteria);
                                     currentState = RESULT;
-                                    //needsUpdate = true;
+
                                 }
                                 enteringCategory = true;
                                 userInput.clear();
