@@ -369,12 +369,17 @@ int main() {
 
     sf::Texture backgroundTexture;
     sf::Sprite backgroundSprite;
+    sf::Texture secondTexture;
+    sf::Sprite secondSprite;
+    sf::Texture thirdTexture;
+    sf::Sprite thirdSprite;
 
     if (!backgroundTexture.loadFromFile("../bluecar.png")) {
         cout << "Failed to load background image" << endl;
         return -1;
     }
     backgroundSprite.setTexture(backgroundTexture);
+
     sf::RenderWindow window(sf::VideoMode(1200, 900), "AutoSearch Vehicle Selection Assistant");
 
     // Load font
@@ -443,7 +448,7 @@ int main() {
     vector<string> sortOrder;
 
     sf::View view = window.getDefaultView();
-    float scroll = 23.0f;
+    float scroll = 25.0f;
 
     sf::Text notCategory("", font, 18);
     notCategory.setFillColor(sf::Color::Red);
@@ -462,6 +467,17 @@ int main() {
                         needsUpdate = true;
                         userInput.clear();
 
+                        if (!secondTexture.loadFromFile("../whitecar.png")) {
+                            cout << "Failed to load background image" << endl;
+                            return -1;
+                        }
+                        secondSprite.setTexture(secondTexture);
+                        sf::Vector2u windowSize = window.getSize();
+                        sf::FloatRect spriteSize = secondSprite.getGlobalBounds();
+                        secondSprite.setPosition(
+                                (windowSize.x - spriteSize.width) / 2,
+                                (windowSize.y - spriteSize.height) / 2);
+
                         sf::Event discardEvent;
                         while (window.pollEvent(discardEvent)) {}
                     }
@@ -469,6 +485,18 @@ int main() {
                         currentState = INPUT;
                         needsUpdate = true;
                         userInput.clear();
+
+                        if (!thirdTexture.loadFromFile("../yellowcar.png")) {
+                            cout << "Failed to load background image" << endl;
+                            return -1;
+                        }
+                        thirdSprite.setTexture(thirdTexture);
+                        sf::Vector2u windowSize = window.getSize();
+                        sf::FloatRect spriteSize = thirdSprite.getGlobalBounds();
+                        thirdSprite.setPosition(
+                                (windowSize.x - spriteSize.width) / 2,
+                                (windowSize.y - spriteSize.height) / 2);
+
 
                         sf::Event discardEvent;
                         while (window.pollEvent(discardEvent)) {}
@@ -628,6 +656,7 @@ int main() {
             }
 
             else if (currentState == INPUT) {
+                window.draw(thirdSprite);
                 window.draw(searchCriteriaText);
                 if (enteringCategory) {
                     inputText.setString("Enter category (or 'done' to finish, " + to_string(maxCategories - validCategoryCount) + " remaining): " + userInput);
@@ -650,6 +679,7 @@ int main() {
                 }
             }
             else if (currentState == RANKING) {
+                window.draw(secondSprite);
                 window.draw(sortCriteriaText);
                 if (enteringSort) {
                     inputText.setString("Enter ranking category (or 'done' to finish, " + to_string(maxSorts - validSortCount) + " remaining): " + userInput);
@@ -678,19 +708,22 @@ int main() {
                 float yPosition = 80.0f;
                 float maxWidth = window.getSize().x - 20;
 
+                int carcounter = 0;
                 for (const auto& car : searchResults) {
-                    string carDetails = "ID: " + car.ID + ", Make: " + car.make + ", Model Year: " + car.modelYear +
-                                        ", MPG: " + to_string(car.mpg) + ", Highway MPG: " + to_string(car.highwayMPG) +
-                                        ", Year: " + to_string(car.year) + ", HorsePower: " + to_string(car.horsePower) +
-                                        ", Torque: " + to_string(car.torque);
+                    string carDetails = "Option " + to_string(carcounter+1) +": "+ car.ID + ", MPG: " + to_string(car.mpg) +
+                                        ", Highway MPG: " + to_string(car.highwayMPG) + ", HorsePower: " + to_string(car.horsePower) +
+                                        ", Torque: " + to_string(car.torque) + ", Driveline: " + car.driveLine + ", Transmission: " +
+                                        car.classification;
+
                     vector<string> wrappedText = wrapText(carDetails, font, 18, maxWidth);
-                    for (const auto &line : wrappedText) {
+                    for (const auto &line : wrappedText){
                         carText.setString(line);
                         carText.setPosition(20, yPosition);
                         window.draw(carText);
                         yPosition += 30;
                     }
                     yPosition += 10;
+                    carcounter++;
                 }
 
                 sf::Text instructionText("Press 'B' to go back to the main menu.\nPress 'Esc' to exit.", font, 24);
@@ -700,17 +733,21 @@ int main() {
             }
 
             else if (currentState == RANKINGRESULT) {
+                sf::Text resultText("Ranking Results:\n", font, 24);
+                resultText.setFillColor(sf::Color::Black);
+                setText(resultText, 20, 20);
+                window.draw(resultText);
 
                 sf::Text carText("", font, 18);
                 carText.setFillColor(sf::Color::Black);
                 float yPosition = 50.0f;
                 float maxWidth = window.getSize().x - 20;
 
-                for (size_t i = 0; i < 20 && i < cars.size(); ++i) {
-                    string carDetails = "ID: " + cars[i].ID + ", Make: " + cars[i].make + ", Model Year: " + cars[i].modelYear +
-                                        ", MPG: " + to_string(cars[i].mpg) + ", Highway MPG: " + to_string(cars[i].highwayMPG) +
-                                        ", Year: " + to_string(cars[i].year) + ", HorsePower: " + to_string(cars[i].horsePower) +
-                                        ", Torque: " + to_string(cars[i].torque);
+                for (int i = 0; i < 20 && i < cars.size(); ++i) {
+                    string carDetails = "Rank " + to_string(i+1) + ": " + cars[i].ID + ", MPG: " + to_string(cars[i].mpg) +
+                                        ", Highway MPG: " + to_string(cars[i].highwayMPG) + ", HorsePower: " + to_string(cars[i].horsePower) +
+                                        ", Torque: " + to_string(cars[i].torque) + ", Driveline: " + cars[i].driveLine + ", Transmission: " +
+                                        cars[i].classification;
                     vector<string> wrappedText = wrapText(carDetails, font, 18, maxWidth);
                     for (const auto &line : wrappedText) {
                         carText.setString(line);
